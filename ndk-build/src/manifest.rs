@@ -104,6 +104,8 @@ pub struct Activity {
     pub exported: Option<bool>,
     #[serde(rename(serialize = "android:resizeableActivity"))]
     pub resizeable_activity: Option<bool>,
+    #[serde(rename(serialize = "android:theme"))]
+    pub theme: Option<String>,
 
     #[serde(rename(serialize = "meta-data"))]
     #[serde(default)]
@@ -124,6 +126,7 @@ impl Default for Activity {
             orientation: None,
             exported: None,
             resizeable_activity: None,
+            theme: None,
             meta_data: Default::default(),
             intent_filter: Default::default(),
         }
