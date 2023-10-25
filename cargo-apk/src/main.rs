@@ -24,6 +24,8 @@ enum ApkCmd {
 struct Args {
     #[clap(flatten)]
     subcommand_args: cargo_subcommand::Args,
+    #[clap(long)]
+    assets: Option<std::path::PathBuf>,
     /// Use device with the given serial (see `adb devices`)
     #[clap(short, long)]
     device: Option<String>,
@@ -137,12 +139,12 @@ fn main() -> anyhow::Result<()> {
     match cmd {
         ApkSubCmd::Check { args } => {
             let cmd = Subcommand::new(args.subcommand_args)?;
-            let builder = ApkBuilder::from_subcommand(&cmd, args.device)?;
+            let builder = ApkBuilder::from_subcommand(&cmd, args.assets, args.device)?;
             builder.check()?;
         }
         ApkSubCmd::Build { args } => {
             let cmd = Subcommand::new(args.subcommand_args)?;
-            let builder = ApkBuilder::from_subcommand(&cmd, args.device)?;
+            let builder = ApkBuilder::from_subcommand(&cmd, args.assets, args.device)?;
             for artifact in cmd.artifacts() {
                 builder.build(artifact)?;
             }
@@ -154,18 +156,18 @@ fn main() -> anyhow::Result<()> {
             let (args, cargo_args) = split_apk_and_cargo_args(cargo_args);
 
             let cmd = Subcommand::new(args.subcommand_args)?;
-            let builder = ApkBuilder::from_subcommand(&cmd, args.device)?;
+            let builder = ApkBuilder::from_subcommand(&cmd, args.assets, args.device)?;
             builder.default(&cargo_cmd, &cargo_args)?;
         }
         ApkSubCmd::Run { args, no_logcat } => {
             let cmd = Subcommand::new(args.subcommand_args)?;
-            let builder = ApkBuilder::from_subcommand(&cmd, args.device)?;
+            let builder = ApkBuilder::from_subcommand(&cmd, args.assets, args.device)?;
             anyhow::ensure!(cmd.artifacts().len() == 1, Error::invalid_args());
             builder.run(&cmd.artifacts()[0], no_logcat)?;
         }
         ApkSubCmd::Gdb { args } => {
             let cmd = Subcommand::new(args.subcommand_args)?;
-            let builder = ApkBuilder::from_subcommand(&cmd, args.device)?;
+            let builder = ApkBuilder::from_subcommand(&cmd, args.assets, args.device)?;
             anyhow::ensure!(cmd.artifacts().len() == 1, Error::invalid_args());
             builder.gdb(&cmd.artifacts()[0])?;
         }
@@ -288,6 +290,7 @@ fn test_split_apk_and_cargo_args() {
         ]),
         (
             Args {
+                assets: None,
                 subcommand_args: cargo_subcommand::Args {
                     quiet: true,
                     ..args_default.subcommand_args

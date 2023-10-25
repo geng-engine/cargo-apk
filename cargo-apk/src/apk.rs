@@ -8,7 +8,7 @@ use ndk_build::error::NdkError;
 use ndk_build::manifest::{IntentFilter, MetaData};
 use ndk_build::ndk::{Key, Ndk};
 use ndk_build::target::Target;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub struct ApkBuilder<'a> {
     cmd: &'a Subcommand,
@@ -22,6 +22,7 @@ pub struct ApkBuilder<'a> {
 impl<'a> ApkBuilder<'a> {
     pub fn from_subcommand(
         cmd: &'a Subcommand,
+        assets: Option<impl AsRef<Path>>,
         device_serial: Option<String>,
     ) -> Result<Self, Error> {
         println!(
@@ -31,6 +32,11 @@ impl<'a> ApkBuilder<'a> {
         );
         let ndk = Ndk::from_env()?;
         let mut manifest = Manifest::parse_from_toml(cmd.manifest())?;
+
+        if let Some(assets) = assets {
+            manifest.assets = Some(assets.as_ref().to_owned());
+        }
+
         let workspace_manifest: Option<Root> = cmd
             .workspace_manifest()
             .map(Root::parse_from_toml)
